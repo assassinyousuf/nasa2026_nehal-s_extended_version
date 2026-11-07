@@ -530,6 +530,8 @@ export const App: React.FC = () => {
             onAddXp={handleAddSpaceXp}
             onStartBaseMission={() => setIsConstructionModalOpen(true)}
             onOpenComic={(issueId) => navigate('learning', { tab: 'COMIC', issue: issueId ? String(issueId) : '1' })}
+            spaceXp={spaceXp}
+            completedMissions={completedMissions}
           />
         );
 
@@ -643,6 +645,8 @@ export const App: React.FC = () => {
             onAddXp={handleAddSpaceXp}
             onStartBaseMission={() => setIsConstructionModalOpen(true)}
             onOpenComic={(issueId) => navigate('learning', { tab: 'COMIC', issue: issueId ? String(issueId) : '1' })}
+            spaceXp={spaceXp}
+            completedMissions={completedMissions}
           />
         );
     }
