@@ -117,7 +117,7 @@ const INITIAL_JUDGE_RUBRIC: JudgeRubricItem[] = [
 
 interface RoleDashboardPageProps {
   currentUser: User | null;
-  onUserChange: (user: User) => void;
+  onUserChange: (user: User | null) => void;
   onOpenAuthModal: (defaultRole?: UserRole) => void;
   onNavigate: (route: AppRoute, params?: Record<string, string>) => void;
   spaceXp: number;
@@ -141,6 +141,12 @@ export const RoleDashboardPage: React.FC<RoleDashboardPageProps> = ({
   onOpenCertificate,
 }) => {
   const activeRole: UserRole = currentUser?.role || 'cadet';
+
+  // Demo Auth Gate state (used when currentUser === null)
+  const [gateRole, setGateRole] = useState<UserRole>('cadet');
+  const [gateIdentifier, setGateIdentifier] = useState('CadetArtemis');
+  const [gatePassword, setGatePassword] = useState('space2026');
+  const [gateError, setGateError] = useState<string | null>(null);
 
   // Local state for Classroom Assignments (shared between Teacher & Student dashboards via localStorage)
   const [assignments, setAssignments] = useState<ClassroomAssignment[]>(() => {
@@ -261,6 +267,250 @@ export const RoleDashboardPage: React.FC<RoleDashboardPageProps> = ({
       s.cadetRank.toLowerCase().includes(rosterSearch.toLowerCase())
   );
 
+  const handleSelectGateDemoRole = (role: UserRole) => {
+    soundFx.playClick(700);
+    setGateRole(role);
+    setGateError(null);
+    if (role === 'cadet') {
+      setGateIdentifier('CadetArtemis');
+      setGatePassword('space2026');
+    } else if (role === 'teacher') {
+      setGateIdentifier('TeacherSarah');
+      setGatePassword('teacher2026');
+    } else {
+      setGateIdentifier('NasaJudge2026');
+      setGatePassword('judge2026');
+    }
+  };
+
+  const handleGateLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setGateError(null);
+    const res = authService.login({
+      identifier: gateIdentifier.trim(),
+      password: gatePassword,
+      expectedRole: gateRole,
+    });
+    if (!res.success || !res.user) {
+      soundFx.playAlarm();
+      setGateError(res.error || 'Invalid credentials. Please use the demo credentials listed below.');
+      return;
+    }
+    soundFx.playVictory();
+    onUserChange(res.user);
+  };
+
+  const handleLogoutDashboard = () => {
+    soundFx.playClick(450);
+    authService.logout();
+    onUserChange(null);
+  };
+
+  // =========================================================================
+  // PROTECTED ROUTE GUARD: BLOCK DASHBOARD ACCESS WITHOUT AUTHENTICATION
+  // =========================================================================
+  if (!currentUser) {
+    return (
+      <div className="max-w-4xl mx-auto py-6 space-y-6">
+        <div className="arcade-glass-card p-6 md:p-10 border-2 border-rose-500/50 bg-gradient-to-b from-slate-950 via-[#070d24] to-slate-950 shadow-2xl">
+          {/* Security Lock Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border-2 border-rose-400 flex items-center justify-center text-3xl shadow-lg shadow-rose-500/20">
+                🔒
+              </div>
+              <div>
+                <span className="text-[11px] font-arcade uppercase tracking-widest px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40 font-bold">
+                  RESTRICTED TELEMETRY CLEARANCE
+                </span>
+                <h1 className="font-arcade text-xl md:text-3xl text-white mt-2">
+                  AUTHENTICATION REQUIRED TO ACCESS DASHBOARD
+                </h1>
+                <p className="text-slate-300 text-xs md:text-sm mt-1">
+                  Please sign in with a <strong className="text-sky-300">Student Cadet</strong>,{' '}
+                  <strong className="text-emerald-300">Classroom Teacher</strong>, or{' '}
+                  <strong className="text-purple-300">NASA Judge</strong> account to unlock your role-specific dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-6">
+            {/* Left 6 Cols: Interactive Login Form */}
+            <div className="lg:col-span-6 bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-arcade text-base text-white">🔐 MISSION CONTROL SIGN IN</h2>
+                <button
+                  type="button"
+                  onClick={() => onOpenAuthModal(gateRole)}
+                  className="text-xs font-bold text-amber-400 hover:underline cursor-pointer"
+                >
+                  ➕ Register New Account
+                </button>
+              </div>
+
+              {/* Role Selector Tabs */}
+              <div>
+                <label className="block text-[11px] font-arcade text-slate-400 uppercase mb-2">
+                  1. Select Account Role:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectGateDemoRole('cadet')}
+                    className={`py-2.5 px-2 rounded-xl font-arcade text-xs border transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                      gateRole === 'cadet'
+                        ? 'bg-sky-500 text-slate-950 border-sky-300 font-bold shadow-lg'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-sky-500/40'
+                    }`}
+                  >
+                    <span className="text-lg">👨‍🚀</span>
+                    <span>Student</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectGateDemoRole('teacher')}
+                    className={`py-2.5 px-2 rounded-xl font-arcade text-xs border transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                      gateRole === 'teacher'
+                        ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-bold shadow-lg'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-emerald-500/40'
+                    }`}
+                  >
+                    <span className="text-lg">👩‍🏫</span>
+                    <span>Teacher</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectGateDemoRole('judge')}
+                    className={`py-2.5 px-2 rounded-xl font-arcade text-xs border transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                      gateRole === 'judge'
+                        ? 'bg-purple-500 text-slate-950 border-purple-300 font-bold shadow-lg'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-purple-500/40'
+                    }`}
+                  >
+                    <span className="text-lg">⚖️</span>
+                    <span>Judge</span>
+                  </button>
+                </div>
+              </div>
+
+              {gateError && (
+                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-400 text-rose-200 text-xs font-semibold">
+                  ⚠️ {gateError}
+                </div>
+              )}
+
+              <form onSubmit={handleGateLoginSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">
+                    Username or Email
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={gateIdentifier}
+                    onChange={(e) => setGateIdentifier(e.target.value)}
+                    placeholder="Enter username..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-mono-code focus:border-sky-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">
+                    Security Passcode
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={gatePassword}
+                    onChange={(e) => setGatePassword(e.target.value)}
+                    placeholder="Enter password..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-mono-code focus:border-sky-400 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 hover:from-sky-400 hover:to-purple-500 text-white font-arcade text-xs tracking-wider font-bold shadow-xl cursor-pointer"
+                >
+                  🔓 SIGN IN & UNLOCK {gateRole.toUpperCase()} DASHBOARD
+                </button>
+              </form>
+            </div>
+
+            {/* Right 6 Cols: Demo Credentials Cards & 1-Click Demo Login */}
+            <div className="lg:col-span-6 space-y-3.5">
+              <div className="text-xs font-arcade uppercase text-amber-400">
+                ⚡ OFFICIAL DEMO ACCOUNTS (CLICK TO AUTO-FILL OR LOGIN):
+              </div>
+
+              {[
+                {
+                  role: 'cadet' as UserRole,
+                  title: '👨‍🚀 Student Cadet Demo Account',
+                  user: 'CadetArtemis',
+                  pass: 'space2026',
+                  desc: 'Unlocks Student Flight Deck, Teacher Assignments, STEM Mastery Telemetry & Printable Diploma.',
+                  border: 'border-sky-500/40',
+                  btnBg: 'bg-sky-500 text-slate-950',
+                },
+                {
+                  role: 'teacher' as UserRole,
+                  title: '👩‍🏫 Classroom Teacher Demo Account',
+                  user: 'TeacherSarah',
+                  pass: 'teacher2026',
+                  desc: 'Unlocks Classroom Student Roster, Live Gradebook, Lab Assignment Creator & 45-Min NGSS Plan.',
+                  border: 'border-emerald-500/40',
+                  btnBg: 'bg-emerald-500 text-slate-950',
+                },
+                {
+                  role: 'judge' as UserRole,
+                  title: '⚖️ NASA Judge Demo Account',
+                  user: 'NasaJudge2026',
+                  pass: 'judge2026',
+                  desc: 'Unlocks 1-Click Master Override (All 76 Missions), Interactive 5-Criteria Space Apps Scorecard & Physics Audit.',
+                  border: 'border-purple-500/40',
+                  btnBg: 'bg-purple-500 text-slate-950',
+                },
+              ].map((demo) => (
+                <div
+                  key={demo.role}
+                  className={`p-4 rounded-2xl bg-slate-900/90 border-2 ${demo.border} flex flex-col justify-between gap-3`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-arcade text-sm text-white">{demo.title}</span>
+                      <span className="text-[11px] font-mono-code bg-slate-950 px-2.5 py-0.5 rounded border border-slate-800 text-amber-300">
+                        {demo.user} / {demo.pass}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">{demo.desc}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectGateDemoRole(demo.role)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold cursor-pointer"
+                    >
+                      📝 Auto-Fill Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickRoleSwitch(demo.role)}
+                      className={`flex-1 py-1.5 px-3 rounded-lg font-arcade text-xs font-bold cursor-pointer shadow ${demo.btnBg}`}
+                    >
+                      ⚡ 1-CLICK DEMO SIGN IN
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* =====================================================================
@@ -298,9 +548,16 @@ export const RoleDashboardPage: React.FC<RoleDashboardPageProps> = ({
                     ? '👩‍🏫 EDUCATOR COMMAND VARIANT'
                     : '⚖️ NASA JUDGE EVALUATION VARIANT'}
                 </span>
-                <span className="text-xs font-mono-code text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">
-                  ID: {currentUser?.username || 'Guest'}
+                <span className="text-xs font-mono-code text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-500/40">
+                  ✓ AUTHENTICATED: {currentUser.username}
                 </span>
+                <button
+                  type="button"
+                  onClick={handleLogoutDashboard}
+                  className="text-xs font-bold text-rose-300 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 px-2.5 py-1 rounded-lg cursor-pointer"
+                >
+                  🚪 Sign Out (Lock Dashboard)
+                </button>
               </div>
               <h1 className="font-arcade text-xl md:text-3xl text-white tracking-wide">
                 {activeRole === 'cadet'

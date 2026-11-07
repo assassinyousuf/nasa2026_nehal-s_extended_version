@@ -142,11 +142,8 @@ export const App: React.FC = () => {
   const [isShaking, setIsShaking] = useState(false);
 
   // User Authentication & Progression (Supports 'cadet' | 'teacher' | 'judge')
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const existing = authService.getCurrentUser();
-    if (existing) return existing;
-    return authService.quickDemoLogin('cadet');
-  });
+  // Starts as null (Guest) unless user has explicitly signed in
+  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
   const [isRoleAccountModalOpen, setIsRoleAccountModalOpen] = useState(false);
   const [roleModalDefaultRole, setRoleModalDefaultRole] = useState<UserRole>('cadet');
   const [collectedFlashcards, setCollectedFlashcards] = useState<TeachingFlashcard[]>([TEACHING_FLASHCARDS[0]]);
@@ -600,11 +597,13 @@ export const App: React.FC = () => {
             currentUser={currentUser}
             onUserChange={(user) => {
               setCurrentUser(user);
-              setCadetProfile((prev) => ({
-                ...prev,
-                callsign: user.username.toUpperCase(),
-                rank: user.cadetRank,
-              }));
+              if (user) {
+                setCadetProfile((prev) => ({
+                  ...prev,
+                  callsign: user.username.toUpperCase(),
+                  rank: user.cadetRank,
+                }));
+              }
             }}
             onOpenAuthModal={(role) => {
               if (role) setRoleModalDefaultRole(role);
@@ -665,11 +664,13 @@ export const App: React.FC = () => {
         currentUser={currentUser}
         onUserChange={(user) => {
           setCurrentUser(user);
-          setCadetProfile((prev) => ({
-            ...prev,
-            callsign: user.username.toUpperCase(),
-            rank: user.cadetRank,
-          }));
+          if (user) {
+            setCadetProfile((prev) => ({
+              ...prev,
+              callsign: user.username.toUpperCase(),
+              rank: user.cadetRank,
+            }));
+          }
         }}
         onOpenRoleAccountModal={(role) => {
           if (role) setRoleModalDefaultRole(role);

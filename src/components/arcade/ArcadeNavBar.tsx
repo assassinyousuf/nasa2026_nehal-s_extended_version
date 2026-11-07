@@ -14,7 +14,7 @@ interface ArcadeNavBarProps {
   onOpenEnlistModal: () => void;
   spaceXp: number;
   currentUser: User | null;
-  onUserChange: (user: User) => void;
+  onUserChange: (user: User | null) => void;
   onOpenRoleAccountModal: (defaultRole?: UserRole) => void;
   onOpenJudgePreview: () => void;
   onOpenTeacherHub: () => void;
@@ -31,6 +31,7 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
   onOpenRoleAccountModal,
 }) => {
   const [isMuted, setIsMuted] = useState(() => spaceMusicEngine.getIsMuted());
+  const isAuthenticated = Boolean(currentUser);
   const activeRole: UserRole = currentUser?.role || 'cadet';
 
   const handleToggleSound = () => {
@@ -50,47 +51,62 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
     onNavigate('home');
   };
 
-  const handleQuickRoleSelect = (role: UserRole) => {
-    soundFx.playPowerUp();
-    const user = authService.quickDemoLogin(role);
-    onUserChange(user);
-    onNavigate('dashboard');
+  const handleLogout = () => {
+    soundFx.playClick(450);
+    authService.logout();
+    onUserChange(null);
   };
 
-  const roleMeta = {
-    cadet: {
-      badge: '👨‍🚀 STUDENT CADET',
-      tabLabel: '📊 5. STUDENT DASHBOARD',
-      pillClass: 'bg-sky-500/20 text-sky-300 border-sky-400/50',
-      activeTabClass: 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.5)] font-bold',
-    },
-    teacher: {
-      badge: '👩‍🏫 EDUCATOR',
-      tabLabel: '📊 5. TEACHER DASHBOARD',
-      pillClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50',
-      activeTabClass: 'bg-emerald-500 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.5)] font-bold',
-    },
-    judge: {
-      badge: '⚖️ NASA JUDGE',
-      tabLabel: '📊 5. JUDGE DASHBOARD',
-      pillClass: 'bg-purple-500/20 text-purple-300 border-purple-400/50',
-      activeTabClass: 'bg-purple-500 text-slate-950 shadow-[0_0_20px_rgba(168,85,247,0.5)] font-bold',
-    },
-  }[activeRole];
+  const roleMeta = isAuthenticated
+    ? {
+        cadet: {
+          badge: '🟢 👨‍🚀 STUDENT CADET',
+          tabLabel: '📊 5. STUDENT DASHBOARD',
+          pillClass: 'bg-sky-500/20 text-sky-300 border-sky-400/50',
+          activeTabClass: 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.5)] font-bold',
+        },
+        teacher: {
+          badge: '🟢 👩‍🏫 EDUCATOR',
+          tabLabel: '📊 5. TEACHER DASHBOARD',
+          pillClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50',
+          activeTabClass: 'bg-emerald-500 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.5)] font-bold',
+        },
+        judge: {
+          badge: '🟢 ⚖️ NASA JUDGE',
+          tabLabel: '📊 5. JUDGE DASHBOARD',
+          pillClass: 'bg-purple-500/20 text-purple-300 border-purple-400/50',
+          activeTabClass: 'bg-purple-500 text-slate-950 shadow-[0_0_20px_rgba(168,85,247,0.5)] font-bold',
+        },
+      }[activeRole]
+    : {
+        badge: '🔒 GUEST (LOGIN REQUIRED FOR DASHBOARD)',
+        tabLabel: '🔒 5. DASHBOARD (LOCKED)',
+        pillClass: 'bg-rose-500/20 text-rose-300 border-rose-400/50',
+        activeTabClass: 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.5)] font-bold',
+      };
 
   return (
     <header className="sticky top-0 z-50 bg-[#040816]/95 backdrop-blur-md border-b-2 border-sky-500/30 shadow-2xl">
       {/* Top Role & Account Telemetry Strip */}
       <div className="bg-slate-950/90 border-b border-slate-800/80 px-4 md:px-8 py-1.5">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
-          {/* Left: Active Role Identity & Callsign */}
+          {/* Left: Active Role Identity & Auth Status */}
           <div className="flex flex-wrap items-center gap-2.5">
             <span className={`text-[10px] font-arcade px-2.5 py-0.5 rounded-full border font-bold ${roleMeta.pillClass}`}>
               {roleMeta.badge}
             </span>
-            <span className="text-slate-400 font-mono-code hidden sm:inline">
-              ACCOUNT: <strong className="text-white">{currentUser?.username || cadetProfile.callsign}</strong>
-            </span>
+            {currentUser ? (
+              <span className="text-slate-300 font-mono-code">
+                USER: <strong className="text-white">{currentUser.username}</strong>{' '}
+                <span className="text-slate-500">({currentUser.cadetRank})</span>
+              </span>
+            ) : (
+              <span className="text-slate-400 font-mono-code hidden sm:inline">
+                Sign in as <strong className="text-sky-300">Student</strong>,{' '}
+                <strong className="text-emerald-300">Teacher</strong>, or{' '}
+                <strong className="text-purple-300">Judge</strong> to unlock Dashboards
+              </span>
+            )}
             <button
               type="button"
               onClick={() => {
@@ -104,16 +120,20 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
             </button>
           </div>
 
-          {/* Right: 1-Click Role Switcher & Full Account Modal Trigger */}
+          {/* Right: Role Login / Switcher & Logout Controls */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-arcade text-slate-400 uppercase mr-1 hidden md:inline">
-              SWITCH ROLE:
+              {currentUser ? 'ACCOUNT ROLE:' : 'SIGN IN AS:'}
             </span>
+
             <button
               type="button"
-              onClick={() => handleQuickRoleSelect('cadet')}
+              onClick={() => {
+                soundFx.playClick(700);
+                onOpenRoleAccountModal('cadet');
+              }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border ${
-                activeRole === 'cadet'
+                currentUser?.role === 'cadet'
                   ? 'bg-sky-500 text-slate-950 border-sky-300 shadow'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-sky-400/50'
               }`}
@@ -123,9 +143,12 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
 
             <button
               type="button"
-              onClick={() => handleQuickRoleSelect('teacher')}
+              onClick={() => {
+                soundFx.playClick(700);
+                onOpenRoleAccountModal('teacher');
+              }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border ${
-                activeRole === 'teacher'
+                currentUser?.role === 'teacher'
                   ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-emerald-400/50'
               }`}
@@ -135,9 +158,12 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
 
             <button
               type="button"
-              onClick={() => handleQuickRoleSelect('judge')}
+              onClick={() => {
+                soundFx.playClick(700);
+                onOpenRoleAccountModal('judge');
+              }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border ${
-                activeRole === 'judge'
+                currentUser?.role === 'judge'
                   ? 'bg-purple-500 text-slate-950 border-purple-300 shadow'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-purple-400/50'
               }`}
@@ -145,16 +171,27 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
               <span>⚖️</span> Judge
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundFx.playClick(700);
-                onOpenRoleAccountModal(activeRole);
-              }}
-              className="ml-1 px-2.5 py-1 rounded-lg bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-300 text-[11px] font-bold cursor-pointer flex items-center gap-1"
-            >
-              <span>🔐</span> Login / Register
-            </button>
+            {currentUser ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="ml-1 px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-200 text-[11px] font-bold cursor-pointer flex items-center gap-1"
+                title="Sign Out & Lock Dashboard"
+              >
+                <span>🚪</span> Logout
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick(700);
+                  onOpenRoleAccountModal('cadet');
+                }}
+                className="ml-1 px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-[11px] font-arcade font-bold cursor-pointer flex items-center gap-1 shadow"
+              >
+                <span>🔐</span> Login / Demo Auth
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -191,7 +228,7 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
             </div>
           </div>
 
-          {/* Center: 5 Chunky Game + Role Dashboard Navigation Tabs */}
+          {/* Center: 5 Chunky Game + Protected Role Dashboard Navigation Tabs */}
           <nav
             className="flex flex-wrap items-center gap-1.5 bg-slate-950/90 p-1.5 rounded-2xl border border-sky-500/30"
             style={{ display: 'flex' }}
@@ -250,7 +287,9 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
               className={`pillar-tab px-3.5 py-2 rounded-xl text-xs font-arcade tracking-wider transition-all cursor-pointer ${
                 currentRoute === 'dashboard'
                   ? roleMeta.activeTabClass
-                  : 'text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20'
+                  : isAuthenticated
+                  ? 'text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20'
+                  : 'text-rose-300 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20'
               }`}
             >
               {roleMeta.tabLabel}
