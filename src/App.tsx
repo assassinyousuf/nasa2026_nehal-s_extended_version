@@ -7,7 +7,7 @@ import { TEACHING_FLASHCARDS, type TeachingFlashcard } from './data/teachingFlas
 import { useAppRouter, type AppRoute } from './router/useAppRouter';
 import { GlobalNavBar } from './components/GlobalNavBar';
 import { authService } from './utils/authService';
-import type { User } from './types/auth';
+import type { User, UserRole } from './types/auth';
 import { spaceMusicEngine } from './utils/spaceMusicEngine';
 import { studentActivityService } from './utils/studentActivityService';
 import {
@@ -25,12 +25,14 @@ import { JudgePreviewBadge, JudgePreviewModal } from './components/JudgePreviewM
 import { WarpBackgroundCanvas } from './components/arcade/WarpBackgroundCanvas';
 import { ArcadeNavBar } from './components/arcade/ArcadeNavBar';
 import { CadetEnlistModal, type CadetProfile } from './components/arcade/CadetEnlistModal';
+import { RoleAccountModal } from './components/arcade/RoleAccountModal';
 
 // Code-split Dedicated Pages
 const LaunchpadPage = lazy(() => import('./pages/LaunchpadPage'));
 const AcademyTrailPage = lazy(() => import('./pages/AcademyTrailPage'));
 const ArcadeSimulatorsPage = lazy(() => import('./pages/ArcadeSimulatorsPage'));
 const AstronautLockerPage = lazy(() => import('./pages/AstronautLockerPage'));
+const RoleDashboardPage = lazy(() => import('./pages/RoleDashboardPage'));
 const OrreryHomePage = lazy(() => import('./pages/OrreryHomePage'));
 const MissionControlPage = lazy(() => import('./pages/MissionControlPage'));
 const AstronautAcademyPage = lazy(() => import('./pages/AstronautAcademyPage'));
@@ -139,8 +141,14 @@ export const App: React.FC = () => {
   const [isShieldActive, setIsShieldActive] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
-  // User Authentication & Progression
-  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
+  // User Authentication & Progression (Supports 'cadet' | 'teacher' | 'judge')
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const existing = authService.getCurrentUser();
+    if (existing) return existing;
+    return authService.quickDemoLogin('cadet');
+  });
+  const [isRoleAccountModalOpen, setIsRoleAccountModalOpen] = useState(false);
+  const [roleModalDefaultRole, setRoleModalDefaultRole] = useState<UserRole>('cadet');
   const [collectedFlashcards, setCollectedFlashcards] = useState<TeachingFlashcard[]>([TEACHING_FLASHCARDS[0]]);
   const [activeFlashcard, setActiveFlashcard] = useState<TeachingFlashcard | null>(null);
   const [completedMissions, setCompletedMissions] = useState<string[]>(() => {
@@ -586,11 +594,43 @@ export const App: React.FC = () => {
           />
         );
 
+      case 'dashboard':
+        return (
+          <RoleDashboardPage
+            currentUser={currentUser}
+            onUserChange={(user) => {
+              setCurrentUser(user);
+              setCadetProfile((prev) => ({
+                ...prev,
+                callsign: user.username.toUpperCase(),
+                rank: user.cadetRank,
+              }));
+            }}
+            onOpenAuthModal={(role) => {
+              if (role) setRoleModalDefaultRole(role);
+              setIsRoleAccountModalOpen(true);
+            }}
+            onNavigate={navigate}
+            spaceXp={spaceXp}
+            onAddXp={handleAddSpaceXp}
+            completedMissions={completedMissions}
+            isJudgeMode={isJudgeMode}
+            onToggleJudgeMasterUnlock={() => {
+              if (isJudgeMode) handleDeactivateJudgeMode();
+              else handleActivateJudgeMode();
+            }}
+            onOpenCertificate={() => setIsCertificateOpen(true)}
+          />
+        );
+
       case 'teacher':
         return (
           <TeacherHubPage
             currentUser={currentUser}
-            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onOpenAuth={() => {
+              setRoleModalDefaultRole('teacher');
+              setIsRoleAccountModalOpen(true);
+            }}
             onNavigate={navigate}
           />
         );
@@ -622,8 +662,21 @@ export const App: React.FC = () => {
         cadetProfile={cadetProfile}
         onOpenEnlistModal={() => setIsEnlistModalOpen(true)}
         spaceXp={spaceXp}
+        currentUser={currentUser}
+        onUserChange={(user) => {
+          setCurrentUser(user);
+          setCadetProfile((prev) => ({
+            ...prev,
+            callsign: user.username.toUpperCase(),
+            rank: user.cadetRank,
+          }));
+        }}
+        onOpenRoleAccountModal={(role) => {
+          if (role) setRoleModalDefaultRole(role);
+          setIsRoleAccountModalOpen(true);
+        }}
         onOpenJudgePreview={() => setIsJudgeModalOpen(true)}
-        onOpenTeacherHub={() => navigate('teacher')}
+        onOpenTeacherHub={() => navigate('dashboard')}
       />
 
       {/* Main Page Area Mounted via URL Router */}
@@ -632,6 +685,27 @@ export const App: React.FC = () => {
           {renderActivePage()}
         </Suspense>
       </main>
+
+      {/* 3-Role Account & Login/Registration Modal */}
+      <RoleAccountModal
+        isOpen={isRoleAccountModalOpen}
+        onClose={() => setIsRoleAccountModalOpen(false)}
+        currentUser={currentUser}
+        initialRole={roleModalDefaultRole}
+        onAuthSuccess={(user, openDashboard) => {
+          setCurrentUser(user);
+          if (user) {
+            setCadetProfile((prev) => ({
+              ...prev,
+              callsign: user.username.toUpperCase(),
+              rank: user.cadetRank,
+            }));
+          }
+          if (openDashboard) {
+            navigate('dashboard');
+          }
+        }}
+      />
 
       {/* Cadet Enlistment Profile Modal */}
       <CadetEnlistModal

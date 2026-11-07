@@ -134,6 +134,42 @@ const DEFAULT_USERS: User[] = [
     purchasedEquipments: ['orion-capsule-simulator'],
     createdAt: '2026-08-20T08:00:00.000Z',
   },
+  {
+    id: 'user-judge-nasa-01',
+    username: 'NasaJudge2026',
+    email: 'judge@spaceapps.nasa.gov',
+    password: 'judge2026',
+    role: 'judge',
+    fullName: 'Dr. Elena Rostova (NASA Judge)',
+    schoolOrOrg: 'NASA International Space Apps Challenge 2026 Panel',
+    judgeSpecialty: 'Aerospace Systems & STEM Pedagogy',
+    avatar: '⚖️',
+    cadetRank: 'NASA Lead Evaluator',
+    coins: 25000,
+    selectedCharacterId: 'neil_armstrong',
+    unlockedCharacterIds: ['neil_armstrong', 'kalpana_chawla', 'peggy_whitson', 'victor_glover', 'chris_hadfield', 'sunita_williams'],
+    completedMissions: ['nasa-artemis-3', 'apollo-11', 'mars-edl-2020', 'shackleton-sol-1-base'],
+    purchasedEquipments: ['kilopower-reactor', 'moxie-o2-gen', 'orion-capsule-simulator'],
+    createdAt: '2026-10-01T08:00:00.000Z',
+  },
+  {
+    id: 'user-judge-nasa-02',
+    username: 'DrGoddardEval',
+    email: 'goddard.eval@nasa.gov',
+    password: 'judge2026',
+    role: 'judge',
+    fullName: 'Cmdr. Marcus Vance (JPL Reviewer)',
+    schoolOrOrg: 'NASA Jet Propulsion Laboratory / Goddard',
+    judgeSpecialty: 'Orbital Mechanics & Flight Simulation',
+    avatar: '🏆',
+    cadetRank: 'Senior Flight Systems Judge',
+    coins: 25000,
+    selectedCharacterId: 'victor_glover',
+    unlockedCharacterIds: ['neil_armstrong', 'kalpana_chawla', 'victor_glover'],
+    completedMissions: ['apollo-11', 'mars-edl-2020'],
+    purchasedEquipments: ['kilopower-reactor'],
+    createdAt: '2026-10-02T09:00:00.000Z',
+  },
 ];
 
 export const authService = {
@@ -208,7 +244,7 @@ export const authService = {
 
   // Register a new user
   register(payload: RegisterPayload): AuthResponse {
-    const { username, password, role, email, fullName, schoolOrOrg, avatar } = payload;
+    const { username, password, role, email, fullName, schoolOrOrg, judgeSpecialty, avatar } = payload;
 
     const trimmedUsername = (username || '').trim();
     if (trimmedUsername.length < 3) {
@@ -219,20 +255,19 @@ export const authService = {
       return { success: false, error: 'Password must be at least 4 characters long.' };
     }
 
-    let trimmedEmail: string | undefined = undefined;
-    if (role === 'teacher') {
-      trimmedEmail = (email || '').trim().toLowerCase();
+    let trimmedEmail: string | undefined = (email || '').trim().toLowerCase() || undefined;
+    if (role === 'teacher' || role === 'judge') {
       if (!trimmedEmail) {
         return {
           success: false,
-          error: 'Teachers must provide a valid email address (e.g., teacher@school.edu).'
+          error: `${role === 'judge' ? 'Judges' : 'Teachers'} must provide a valid email address.`
         };
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmedEmail)) {
         return {
           success: false,
-          error: 'Please enter a valid email address format (e.g., teacher@school.edu).'
+          error: 'Please enter a valid email address format.'
         };
       }
     }
@@ -248,7 +283,7 @@ export const authService = {
       };
     }
 
-    if (role === 'teacher' && trimmedEmail) {
+    if ((role === 'teacher' || role === 'judge') && trimmedEmail) {
       const emailTaken = users.some(
         (u) => u.email && u.email.toLowerCase() === trimmedEmail!.toLowerCase()
       );
@@ -260,20 +295,35 @@ export const authService = {
       }
     }
 
+    const defaultRank =
+      role === 'judge'
+        ? 'NASA Lead Evaluator'
+        : role === 'teacher'
+        ? 'Classroom Flight Commander'
+        : 'Junior Stargazer';
+
+    const defaultAvatar =
+      role === 'judge' ? '⚖️' : role === 'teacher' ? '👩‍🏫' : '👨‍🚀';
+
     const newUser: User = {
       id: `user-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       username: trimmedUsername,
       password: password,
       role: role,
       email: trimmedEmail,
-      fullName: fullName?.trim() || (role === 'teacher' ? 'Flight Instructor' : trimmedUsername),
-      schoolOrOrg: schoolOrOrg?.trim(),
-      avatar: avatar || (role === 'teacher' ? '👩‍🏫' : '👨‍🚀'),
-      cadetRank: role === 'teacher' ? 'Classroom Flight Commander' : 'Junior Stargazer',
-      coins: role === 'teacher' ? 9999 : 500, // New student gets 500 starting coins
+      fullName:
+        fullName?.trim() ||
+        (role === 'judge' ? 'NASA Evaluator' : role === 'teacher' ? 'Flight Instructor' : trimmedUsername),
+      schoolOrOrg:
+        schoolOrOrg?.trim() ||
+        (role === 'judge' ? 'NASA Space Apps 2026 Panel' : role === 'teacher' ? 'STEM Academy' : 'Junior Space Corps'),
+      judgeSpecialty: judgeSpecialty?.trim(),
+      avatar: avatar || defaultAvatar,
+      cadetRank: defaultRank,
+      coins: role === 'judge' ? 25000 : role === 'teacher' ? 9999 : 500,
       selectedCharacterId: 'neil_armstrong',
       unlockedCharacterIds: ['neil_armstrong', 'kalpana_chawla'],
-      completedMissions: [],
+      completedMissions: role === 'judge' ? ['nasa-artemis-3', 'apollo-11', 'mars-edl-2020'] : [],
       purchasedEquipments: [],
       createdAt: new Date().toISOString(),
     };
@@ -283,6 +333,23 @@ export const authService = {
     this.setCurrentUser(newUser);
 
     return { success: true, user: newUser };
+  },
+
+  // 1-Click Instant Demo Login for Student, Teacher, or Judge
+  quickDemoLogin(role: 'cadet' | 'teacher' | 'judge'): User {
+    const users = this.getUsers();
+    const targetUsername =
+      role === 'judge'
+        ? 'NasaJudge2026'
+        : role === 'teacher'
+        ? 'TeacherSarah'
+        : 'CadetArtemis';
+    const found =
+      users.find((u) => u.username.toLowerCase() === targetUsername.toLowerCase()) ||
+      users.find((u) => u.role === role) ||
+      DEFAULT_USERS[0];
+    this.setCurrentUser(found);
+    return found;
   },
 
   // Login with Username (or Email for teachers) + Password

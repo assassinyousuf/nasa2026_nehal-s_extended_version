@@ -1,25 +1,26 @@
 // ============================================================
 // NASA Jr_AstroCamp — Authentication & User Role Types
-// Supports Cadet (Username + Password) & Teacher (Email + Username + Password)
+// Supports Student Cadet, Classroom Teacher, and NASA Judge
 // ============================================================
 
-export type UserRole = 'cadet' | 'teacher';
+export type UserRole = 'cadet' | 'teacher' | 'judge';
 
 export interface User {
   id: string;
   username: string;
   password: string; // Stored in client-side secure store
   role: UserRole;
-  email?: string; // Required for teachers, optional for cadets
+  email?: string; // Required for teachers/judges, optional for cadets
   fullName?: string;
-  schoolOrOrg?: string; // School or educational institute
+  schoolOrOrg?: string; // School, educational institute, or NASA panel
+  judgeSpecialty?: string; // e.g., 'Aerospace Engineering & EdTech'
   avatar: string;
-  cadetRank: string; // e.g., 'Flight Candidate', 'Mission Specialist', 'Commander'
-  coins: number; // In-game currency earned from missions
-  selectedCharacterId?: string; // e.g., 'neil_armstrong'
-  unlockedCharacterIds?: string[]; // IDs of unlocked historic astronaut characters
-  completedMissions?: string[]; // IDs of completed missions
-  purchasedEquipments?: string[]; // IDs of owned equipment
+  cadetRank: string; // e.g., 'Flight Candidate', 'Classroom Flight Commander', 'NASA Lead Evaluator'
+  coins: number; // In-game currency / XP earned from missions
+  selectedCharacterId?: string;
+  unlockedCharacterIds?: string[];
+  completedMissions?: string[];
+  purchasedEquipments?: string[];
   createdAt: string;
 }
 
@@ -30,12 +31,14 @@ export interface RegisterPayload {
   email?: string;
   fullName?: string;
   schoolOrOrg?: string;
+  judgeSpecialty?: string;
   avatar?: string;
 }
 
 export interface LoginPayload {
-  identifier: string; // Username or Email (for teachers)
+  identifier: string; // Username or Email
   password: string;
+  expectedRole?: UserRole;
 }
 
 export interface AuthResponse {
