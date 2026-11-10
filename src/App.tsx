@@ -39,6 +39,7 @@ import { JudgePreviewBadge, JudgePreviewModal } from './components/JudgePreviewM
 import { WarpBackgroundCanvas } from './components/arcade/WarpBackgroundCanvas';
 import { ArcadeNavBar } from './components/arcade/ArcadeNavBar';
 import { CadetEnlistModal, type CadetProfile } from './components/arcade/CadetEnlistModal';
+import { MissionMentor } from './components/MissionMentor';
 
 // Code-split Dedicated Pages
 const LaunchpadPage = lazy(() => import('./pages/LaunchpadPage'));
@@ -962,6 +963,8 @@ export const App: React.FC = () => {
           {shackletonStorageError}
         </div>
       )}
+
+      <MissionMentor gameState={gameState} />
 
       {/* Global Aerospace Footer */}
       <footer className="main-footer" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '12px 20px', background: '#03050c' }}>
