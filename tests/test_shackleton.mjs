@@ -19,6 +19,10 @@ assert.equal(terrain.SHACKLETON_TERRAIN_ATTRIBUTION.label, 'GAME SIMULATION VALU
 assert.match(terrain.SHACKLETON_TERRAIN_ATTRIBUTION.limitation, /not sampled from a LOLA DEM/);
 assert.ok(Number.isFinite(terrain.getShackletonHeight(5, -12)));
 assert.ok(terrain.getShackletonSlopeDegrees(-7, -12) > 19, 'The simulated route must contain a rollover-risk slope.');
+assert.ok(
+  terrain.getShackletonHeight(-23, -17) < terrain.getShackletonHeight(-17.2, -17),
+  'The illustrative impact basin should sit below its raised rim.'
+);
 assert.equal(terrain.ICE_WAYPOINTS.length, 3);
 assert.ok(terrain.ICE_WAYPOINTS.every((point) => point.hydrogenSignalPercent > 0 && point.iceLikelihoodPercent > 0));
 assert.equal(terrain.getStormTimerSeconds(), 90);

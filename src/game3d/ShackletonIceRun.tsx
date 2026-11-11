@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BatteryCharging, Heater, Radio, RotateCcw, X } from 'lucide-react';
 import { soundFx } from '../utils/audioEffects';
+import { triggerHapticFeedback } from '../utils/haptics';
 import {
   getRoverPowerDrainPerSecond,
   getShackletonHeight,
@@ -78,7 +79,7 @@ const INITIAL_TELEMETRY: Telemetry = {
   message: 'Collect three ice readings, then return to the landing pad.',
 };
 
-const TERRAIN_GRID_SIZE = 31;
+const TERRAIN_GRID_SIZE = 61;
 const TERRAIN_HALF_SIZE = 30;
 const SAMPLE_RANGE = 3.2;
 const CHARGER_RANGE = 4;
@@ -126,52 +127,120 @@ function createTerrainMesh(): { mesh: THREE.Mesh; vertices: Float32Array; indice
   geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
   geometry.setIndex(new THREE.BufferAttribute(indices, 1));
   geometry.computeVertexNormals();
+  const regolith = document.createElement('canvas');
+  regolith.width = 512;
+  regolith.height = 512;
+  const context = regolith.getContext('2d', { willReadFrequently: true });
+  if (!context) throw new Error('Could not create the lunar regolith material.');
+  const image = context.createImageData(regolith.width, regolith.height);
+  let seed = 0x51ac;
+  for (let index = 0; index < image.data.length; index += 4) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const x = (index / 4) % regolith.width;
+    const y = Math.floor(index / 4 / regolith.width);
+    const broadVariation = Math.sin(x * 0.037) * 5 + Math.cos(y * 0.029) * 4;
+    const grain = ((seed >>> 24) / 255 - 0.5) * 38;
+    const shade = Math.max(0, Math.min(255, 133 + broadVariation + grain));
+    image.data[index] = shade;
+    image.data[index + 1] = shade;
+    image.data[index + 2] = shade;
+    image.data[index + 3] = 255;
+  }
+  context.putImageData(image, 0, 0);
+  const regolithTexture = new THREE.CanvasTexture(regolith);
+  regolithTexture.wrapS = THREE.RepeatWrapping;
+  regolithTexture.wrapT = THREE.RepeatWrapping;
+  regolithTexture.repeat.set(10, 10);
+  regolithTexture.colorSpace = THREE.SRGBColorSpace;
+  const regolithBump = regolithTexture.clone();
+  regolithBump.colorSpace = THREE.NoColorSpace;
   const material = new THREE.MeshStandardMaterial({
-    color: '#555b63',
+  color: '#aaaaa5',
+  map: regolithTexture,
+  bumpMap: regolithBump,
+    bumpScale: 0.065,
     roughness: 1,
-    flatShading: true,
   });
-  return { mesh: new THREE.Mesh(geometry, material), vertices, indices };
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.receiveShadow = true;
+  return { mesh, vertices, indices };
 }
 
 function createRoverVisual(): THREE.Group {
   const rover = new THREE.Group();
   const chassis = new THREE.Mesh(
     new THREE.BoxGeometry(1.7, 0.55, 2.4),
-    new THREE.MeshStandardMaterial({ color: '#d8b15a', roughness: 0.76, flatShading: true })
+    new THREE.MeshStandardMaterial({ color: '#aeb6bd', roughness: 0.68, metalness: 0.42 })
   );
   chassis.position.y = 0.25;
+  chassis.castShadow = true;
   rover.add(chassis);
+
+  const deck = new THREE.Mesh(
+    new THREE.BoxGeometry(1.34, 0.12, 1.55),
+    new THREE.MeshStandardMaterial({ color: '#344453', roughness: 0.72, metalness: 0.28 })
+  );
+  deck.position.set(0, 0.59, 0.04);
+  deck.castShadow = true;
+  rover.add(deck);
 
   const cabin = new THREE.Mesh(
     new THREE.BoxGeometry(0.9, 0.55, 0.8),
-    new THREE.MeshStandardMaterial({ color: '#253044', roughness: 0.65, flatShading: true })
+    new THREE.MeshStandardMaterial({
+      color: '#274c62',
+      roughness: 0.24,
+      metalness: 0.42,
+      emissive: '#102533',
+    })
   );
   cabin.position.set(0, 0.78, -0.15);
+  cabin.castShadow = true;
   rover.add(cabin);
 
-  const wheelMaterial = new THREE.MeshStandardMaterial({ color: '#171b22', roughness: 1 });
+  const wheelMaterial = new THREE.MeshStandardMaterial({ color: '#292b2d', roughness: 0.95, metalness: 0.12 });
+  const hubMaterial = new THREE.MeshStandardMaterial({ color: '#9da5a9', roughness: 0.55, metalness: 0.52 });
   for (const x of [-0.95, 0.95]) {
-    for (const z of [-0.8, 0.8]) {
-      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.22, 8), wheelMaterial);
+    const rocker = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.12, 2.05),
+      new THREE.MeshStandardMaterial({ color: '#7c878d', roughness: 0.72, metalness: 0.38 })
+    );
+    rocker.position.set(x, 0.06, 0);
+    rocker.castShadow = true;
+    rover.add(rocker);
+    for (const z of [-0.95, 0, 0.95]) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.22, 16), wheelMaterial);
       wheel.rotation.z = Math.PI / 2;
       wheel.position.set(x, -0.03, z);
+      wheel.castShadow = true;
       rover.add(wheel);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.235, 12), hubMaterial);
+      hub.rotation.z = Math.PI / 2;
+      hub.position.set(x * 1.03, -0.03, z);
+      rover.add(hub);
     }
   }
 
+  const mastMaterial = new THREE.MeshStandardMaterial({ color: '#bdc6c8', roughness: 0.55, metalness: 0.5 });
   const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.05, 0.85, 6),
-    new THREE.MeshStandardMaterial({ color: '#e9edf4', roughness: 0.7 })
+    new THREE.CylinderGeometry(0.035, 0.05, 0.85, 10),
+    mastMaterial
   );
   mast.position.set(0, 1.15, -0.72);
+  mast.castShadow = true;
   rover.add(mast);
   const sensor = new THREE.Mesh(
     new THREE.BoxGeometry(0.42, 0.22, 0.32),
-    new THREE.MeshStandardMaterial({ color: '#61d8e8', emissive: '#15454d', flatShading: true })
+    new THREE.MeshStandardMaterial({ color: '#465b66', roughness: 0.42, metalness: 0.46 })
   );
   sensor.position.set(0, 1.58, -0.72);
+  sensor.castShadow = true;
   rover.add(sensor);
+  const lens = new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, 12, 8),
+    new THREE.MeshStandardMaterial({ color: '#77a9b5', roughness: 0.18, metalness: 0.28 })
+  );
+  lens.position.set(0, 1.58, -0.9);
+  rover.add(lens);
   return rover;
 }
 
@@ -181,19 +250,72 @@ function createMarker(
   color: string,
   height = 0.3
 ): THREE.Mesh {
+  const beaconHeight = Math.max(height, 0.85);
   const marker = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.62, 0.82, height, 8),
+    new THREE.CylinderGeometry(0.09, 0.14, beaconHeight, 12),
     new THREE.MeshStandardMaterial({
       color,
       emissive: color,
-      emissiveIntensity: 0.3,
-      roughness: 0.8,
-      flatShading: true,
+      emissiveIntensity: 0.08,
+      roughness: 0.55,
+      metalness: 0.28,
     })
   );
-  marker.position.set(position.x, getShackletonHeight(position.x, position.z) + height / 2 + 0.1, position.z);
+  marker.position.set(position.x, getShackletonHeight(position.x, position.z) + beaconHeight / 2 + 0.1, position.z);
+  marker.castShadow = true;
   scene.add(marker);
   return marker;
+}
+
+function createStarField(scene: THREE.Scene): void {
+  const positions = new Float32Array(540 * 3);
+  let seed = 0x1a2b3c;
+  for (let index = 0; index < positions.length; index += 3) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    positions[index] = ((seed >>> 0) / 0xffffffff - 0.5) * 220;
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    positions[index + 1] = 16 + ((seed >>> 0) / 0xffffffff) * 90;
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    positions[index + 2] = ((seed >>> 0) / 0xffffffff - 0.5) * 220;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const stars = new THREE.Points(
+    geometry,
+    new THREE.PointsMaterial({ color: '#bdc9d6', size: 0.22, sizeAttenuation: true, transparent: true, opacity: 0.7 })
+  );
+  scene.add(stars);
+}
+
+function createSurfaceRocks(scene: THREE.Scene): void {
+  const geometry = new THREE.IcosahedronGeometry(0.24, 0);
+  const material = new THREE.MeshStandardMaterial({ color: '#85837f', roughness: 1, flatShading: true });
+  const rocks = new THREE.InstancedMesh(geometry, material, 84);
+  rocks.receiveShadow = true;
+  const dummy = new THREE.Object3D();
+  const protectedFeatures = [...ICE_WAYPOINTS, ...KILOPOWER_CHARGERS, { x: 0, z: 22 }];
+  let seed = 0x10a7;
+  const next = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0xffffffff;
+  };
+  let placed = 0;
+  while (placed < rocks.count) {
+    const x = (next() - 0.5) * TERRAIN_HALF_SIZE * 1.8;
+    const z = (next() - 0.5) * TERRAIN_HALF_SIZE * 1.8;
+    const nearFeature = protectedFeatures.some((feature) => Math.hypot(feature.x - x, feature.z - z) < 3.2);
+    if (nearFeature) continue;
+
+    const scale = 0.45 + next() * 1.2;
+    dummy.position.set(x, getShackletonHeight(x, z) + scale * 0.12, z);
+    dummy.rotation.set(next() * 0.7, next() * Math.PI, next() * 0.7);
+    dummy.scale.set(scale, scale * (0.45 + next() * 0.35), scale * (0.7 + next() * 0.55));
+    dummy.updateMatrix();
+    rocks.setMatrixAt(placed, dummy.matrix);
+    placed += 1;
+  }
+  rocks.instanceMatrix.needsUpdate = true;
+  scene.add(rocks);
 }
 
 function formatClock(seconds: number): string {
@@ -267,6 +389,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
     let temperature = 100;
     let elapsed = 0;
     let rolloverSeconds = 0;
+    let wasSlopeRisk = false;
     let lastHudUpdate = 0;
     let perfStart = performance.now();
     let perfFrames = 0;
@@ -290,6 +413,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
             'Next attempt: use the slope display, manage the heater, and choose a charging stop.',
           ];
       const runResult = { success, causeChain, iceSamples: collected.size, reason };
+      triggerHapticFeedback(success ? [18, 30, 18] : [45, 35, 75]);
       setResult(runResult);
       onRunRecorded?.({ success, iceSamples: collected.size, reason });
     };
@@ -303,6 +427,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
       if (nearbyCharger) {
         battery = Math.min(100, battery + 25);
         elapsed += 15;
+        triggerHapticFeedback([14, 28, 14]);
         hudMessage = 'Charged +25% battery. Charging used 15 seconds of the storm warning.';
         return;
       }
@@ -312,10 +437,12 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
       );
       if (waypoint) {
         collected = new Set(collected).add(waypoint.id);
+        triggerHapticFeedback([12, 24, 12, 24, 32]);
         hudMessage = `${waypoint.name}: hydrogen signal ${waypoint.hydrogenSignalPercent}%, ice likelihood ${waypoint.iceLikelihoodPercent}% (GAME SIMULATION VALUES).`;
         return;
       }
 
+      triggerHapticFeedback(8);
       hudMessage = 'Move closer to a yellow sampling marker or blue Kilopower pad.';
     };
 
@@ -343,22 +470,39 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
       if (!gl) throw new Error('WebGL2 is unavailable on this device.');
 
       renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: true, powerPreference: 'low-power' });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
       renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 500, false);
       renderer.setClearColor('#070a11', 1);
-      renderer.shadowMap.enabled = false;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.Fog('#070a11', 30, 95);
+      scene.background = new THREE.Color('#070a11');
+      scene.fog = new THREE.Fog('#070a11', 42, 105);
       const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 140);
       camera.position.set(0, 7, 32);
-      scene.add(new THREE.HemisphereLight('#dce7ff', '#25252b', 1.45));
-      const sunlight = new THREE.DirectionalLight('#fff0d3', 2.1);
+      scene.add(new THREE.HemisphereLight('#c6d3e2', '#18191b', 0.58));
+      const sunlight = new THREE.DirectionalLight('#fff0d7', 2.45);
       sunlight.position.set(-20, 32, -12);
+      sunlight.castShadow = true;
+      sunlight.shadow.mapSize.set(1024, 1024);
+      sunlight.shadow.camera.left = -48;
+      sunlight.shadow.camera.right = 48;
+      sunlight.shadow.camera.top = 48;
+      sunlight.shadow.camera.bottom = -48;
+      sunlight.shadow.camera.near = 1;
+      sunlight.shadow.camera.far = 90;
+      sunlight.shadow.bias = -0.0002;
+      sunlight.shadow.normalBias = 0.025;
       scene.add(sunlight);
+      createStarField(scene);
 
       const terrain = createTerrainMesh();
       scene.add(terrain.mesh);
+      createSurfaceRocks(scene);
       world = new RAPIER.World({ x: 0, y: -1.62, z: 0 });
       world.timestep = 1 / 60;
       const groundBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
@@ -367,11 +511,13 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
 
       const base = new THREE.Mesh(
         new THREE.CylinderGeometry(3.2, 3.8, 0.4, 10),
-        new THREE.MeshStandardMaterial({ color: '#64748b', roughness: 0.95, flatShading: true })
+        new THREE.MeshStandardMaterial({ color: '#777c80', roughness: 0.9, metalness: 0.12 })
       );
       base.position.set(0, getShackletonHeight(0, 22) + 0.18, 22);
+      base.castShadow = true;
+      base.receiveShadow = true;
       scene.add(base);
-      const baseLight = new THREE.PointLight('#7dd3fc', 12, 14, 2);
+      const baseLight = new THREE.PointLight('#e5cf9f', 4, 8, 2);
       baseLight.position.set(0, getShackletonHeight(0, 22) + 2.2, 22);
       scene.add(baseLight);
 
@@ -412,11 +558,12 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
       window.addEventListener('resize', handleResize);
       handleResize();
 
-      const clock = new THREE.Clock();
-      const animate = () => {
+      let previousFrameTime = performance.now();
+      const animate = (frameTime: number) => {
         if (disposed || !runtime || !renderer || !world || !scene) return;
+        const delta = Math.min((frameTime - previousFrameTime) / 1000, 0.05);
+        previousFrameTime = frameTime;
         animationFrame = window.requestAnimationFrame(animate);
-        const delta = Math.min(clock.getDelta(), 0.05);
 
         if (startedRef.current && !gameOverRef.current) {
           elapsed += delta;
@@ -438,7 +585,10 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
           }, true);
           roverBody.setAngvel({ x: 0, y: input.steering * 0.8, z: 0 }, true);
 
-          if (slopeDegrees > 19 && Math.abs(throttle) > 0.1) {
+          const slopeRisk = slopeDegrees > 19 && Math.abs(throttle) > 0.1;
+          if (slopeRisk && !wasSlopeRisk) triggerHapticFeedback([32, 24, 32]);
+          wasSlopeRisk = slopeRisk;
+          if (slopeRisk) {
             const dx = getShackletonHeight(bodyPosition.x + 0.5, bodyPosition.z) - getShackletonHeight(bodyPosition.x - 0.5, bodyPosition.z);
             const dz = getShackletonHeight(bodyPosition.x, bodyPosition.z + 0.5) - getShackletonHeight(bodyPosition.x, bodyPosition.z - 0.5);
             roverBody.applyTorqueImpulse({ x: Math.sign(dz) * 0.035, y: 0, z: -Math.sign(dx) * 0.035 }, true);
@@ -452,6 +602,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
           );
           if (pendingHeaterToggleRef.current) {
             heaterOnRef.current = !heaterOnRef.current;
+            triggerHapticFeedback(18);
             setIsHeaterOn(heaterOnRef.current);
             pendingHeaterToggleRef.current = false;
             hudMessage = heaterOnRef.current
@@ -529,7 +680,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
             marker.rotation.y += reducedMotion ? 0 : delta * 0.6;
           }
           const target = new THREE.Vector3(bodyPosition.x, bodyPosition.y + 1.2, bodyPosition.z);
-          const desiredCamera = new THREE.Vector3(0, 5.2, 9.5).applyQuaternion(orientation).add(target);
+          const desiredCamera = new THREE.Vector3(0, 4.1, 8).applyQuaternion(orientation).add(target);
           if (reducedMotion) camera.position.copy(desiredCamera);
           else camera.position.lerp(desiredCamera, Math.min(1, delta * 3.5));
           camera.lookAt(target);
@@ -539,13 +690,13 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
         perfFrames += 1;
         if (performance.now() - perfStart > 2400) {
           const fps = (perfFrames * 1000) / (performance.now() - perfStart);
-          const targetRatio = fps < 38 ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+          const targetRatio = fps < 38 ? 1 : Math.min(window.devicePixelRatio || 1, 1.65);
           if (renderer && renderer.getPixelRatio() !== targetRatio) renderer.setPixelRatio(targetRatio);
           perfStart = performance.now();
           perfFrames = 0;
         }
       };
-      animate();
+      animate(performance.now());
     };
 
     void initialize().catch((error: unknown) => {
@@ -566,7 +717,13 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
           if (!(object instanceof THREE.Mesh)) return;
           object.geometry.dispose();
           const materials = Array.isArray(object.material) ? object.material : [object.material];
-          materials.forEach((material) => material.dispose());
+          materials.forEach((material) => {
+            if (material instanceof THREE.MeshStandardMaterial) {
+              material.map?.dispose();
+              material.bumpMap?.dispose();
+            }
+            material.dispose();
+          });
         });
       }
       renderer?.dispose();
@@ -583,8 +740,14 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
   }, [result]);
 
   const setTouchInput = (input: HeldInput, pressed: boolean) => {
-    if (pressed) touchRef.current.add(input);
-    else touchRef.current.delete(input);
+    if (pressed) {
+      if (!touchRef.current.has(input)) {
+        touchRef.current.add(input);
+        triggerHapticFeedback(8);
+      }
+    } else {
+      touchRef.current.delete(input);
+    }
   };
 
   const restart = () => {
@@ -618,6 +781,7 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
 
   const startRun = () => {
     soundFx.playClick(760);
+    triggerHapticFeedback(16);
     setResult(null);
     gameOverRef.current = false;
     startedRef.current = true;
@@ -654,11 +818,31 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
       </header>
 
       <section className="shackleton-hud" aria-label="Rover status">
-        <div><span>BATTERY</span><strong>{Math.round(telemetry.battery)}% <small>SIMULATED</small></strong></div>
-        <div><span>ROVER HEAT</span><strong>{Math.round(telemetry.roverTemperature)}% <small>SIMULATED</small></strong></div>
-        <div><span>STORM TIMER</span><strong>{formatClock(telemetry.stormSeconds)} <small>SIMULATED</small></strong></div>
-        <div><span>SLOPE</span><strong>{Math.round(telemetry.slopeDegrees)}° <small>SIMULATED</small></strong></div>
-        <div><span>ICE READINGS</span><strong>{telemetry.collectedSamples}/{ICE_WAYPOINTS.length} <small>SIMULATED</small></strong></div>
+        <div>
+          <span>BATTERY · POWER BUS</span>
+          <strong>{Math.round(telemetry.battery)}% <small>SIM</small></strong>
+          <span className="shackleton-meter-track"><span style={{ width: `${telemetry.battery}%` }} /></span>
+        </div>
+        <div>
+          <span>THERMAL CONTROL</span>
+          <strong>{Math.round(telemetry.roverTemperature)}% <small>SIM</small></strong>
+          <span className="shackleton-meter-track"><span style={{ width: `${telemetry.roverTemperature}%` }} /></span>
+        </div>
+        <div>
+          <span>STORM COUNTDOWN</span>
+          <strong>{formatClock(telemetry.stormSeconds)} <small>SIM</small></strong>
+          <span className="shackleton-meter-track"><span style={{ width: `${(telemetry.stormSeconds / getStormTimerSeconds(stormWarningHours)) * 100}%` }} /></span>
+        </div>
+        <div>
+          <span>LOCAL TERRAIN SLOPE</span>
+          <strong>{Math.round(telemetry.slopeDegrees)}° <small>SIM</small></strong>
+          <span className="shackleton-meter-track"><span className="shackleton-meter-track__slope" style={{ width: `${Math.min(100, (telemetry.slopeDegrees / 30) * 100)}%` }} /></span>
+        </div>
+        <div>
+          <span>SURVEY SITES</span>
+          <strong>{telemetry.collectedSamples}/{ICE_WAYPOINTS.length} <small>SIM</small></strong>
+          <span className="shackleton-meter-track"><span style={{ width: `${(telemetry.collectedSamples / ICE_WAYPOINTS.length) * 100}%` }} /></span>
+        </div>
       </section>
 
       <div className="shackleton-data-note">
@@ -771,7 +955,10 @@ export const ShackletonIceRun: React.FC<ShackletonIceRunProps> = ({
           {renderTouchButton('reverse', 'Drive backward', <ArrowDown size={20} />)}
           {renderTouchButton('right', 'Steer right', <ArrowRight size={20} />)}
         </div>
-        <p>Keyboard: WASD / arrows · E or Space: scan / charge · H: heater · Gamepad: left stick + A</p>
+        <p>
+          Keyboard: WASD / arrows · E: scan / charge · H: heater · Gamepad: left stick + A
+          {' · '}Touch haptics on supported devices
+        </p>
       </footer>
     </div>
   );

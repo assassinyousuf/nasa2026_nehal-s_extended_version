@@ -16,6 +16,27 @@ export default defineConfig({
         browserName: 'chromium',
       },
     },
+    {
+      name: 'desktop-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        browserName: 'chromium',
+      },
+    },
+    {
+      name: 'mobile-webkit',
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'webkit',
+      },
+    },
+    {
+      name: 'desktop-firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+        browserName: 'firefox',
+      },
+    },
   ],
   webServer: [
     {

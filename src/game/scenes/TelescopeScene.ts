@@ -161,10 +161,8 @@ export class TelescopeScene extends Phaser.Scene {
     }
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown || true) {
-        this.targetReticleX = pointer.x;
-        this.targetReticleY = pointer.y;
-      }
+      this.targetReticleX = pointer.x;
+      this.targetReticleY = pointer.y;
     });
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {

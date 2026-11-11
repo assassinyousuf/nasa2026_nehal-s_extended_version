@@ -10,8 +10,6 @@ import {
   Wind,
   Droplets,
   Radio,
-  Compass,
-  Award,
 } from 'lucide-react';
 import { soundFx } from '../utils/audioEffects';
 

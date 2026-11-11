@@ -8,7 +8,7 @@
 ## 1. Testing Summary & Quality Standards
 
 Jr_AstroCamp maintains a dual-verification strategy covering both the interactive web expedition platform (React 19 / TypeScript / Vite / Three.js) and the desktop 60 FPS flight simulator (Python 3 / Pygame-ce):
-1. **Automated Web Tests (`npm test`):** Validates deterministic simulation math, cargo mass validation, BVAD consumption formulas, Kilopower night generation, shift actions, boundary clamping, game-over triggers, DONKI mapping/source selection, the simulated radiation budget limit, Cadet/Explorer/Advanced HUD meter selection, resource costs for every Cadet lunar and Mars choice, simulated terrain risk, storm timer scaling, rover energy trade-offs, Rapier WASM initialization, Shackleton attempt/reward persistence, co-op simulation replay, isolated role dashboards, and a local Colyseus room with multiple clients.
+1. **Automated Web Tests (`npm test`):** Validates deterministic simulation math, cargo mass validation, BVAD consumption formulas, Kilopower night generation, shift actions, boundary clamping, game-over triggers, DONKI mapping/source selection, the simulated radiation budget limit, Cadet/Explorer/Advanced HUD meter selection, resource costs for every Cadet lunar and Mars choice, procedural crater terrain and simulated rollover risk, storm timer scaling, rover energy trade-offs, supported/unavailable haptic behavior, student mentor guidance, Rapier WASM initialization, Shackleton attempt/reward persistence, co-op simulation replay, isolated role dashboards, and a local Colyseus room with multiple clients.
 2. **Automated Pygame Engine Headless Tests (`python tests/test_game.py`):** Validates 76 cataloged missions, procedural audio synthesis, 6 flight disciplines, and save file persistence.
 3. **TypeScript & Static Linting Verification (`npm run build`):** Enforces strict types (`tsc -b`) and fast modern linting (`oxlint`).
 4. **End-to-End Browser & Usability Verification (`npm run test:e2e`):** Mobile Chromium Playwright smoke tests cover campaign launch, rover start, failure debrief, the linked notebook route, and starting a network crew mission.
@@ -34,11 +34,13 @@ Jr_AstroCamp maintains a dual-verification strategy covering both the interactiv
   11. `[PASS]` A linked DONKI record generates an event carrying its record ID and honest source label; unavailable data stays a game scenario.
   12. `[PASS]` Cadet HUD has exactly three meters (Power, Life Support, Radiation Dose Budget); Explorer and Advanced tier meter sets remain distinct.
   13. `[PASS]` Every option in the lunar and Mars Cadet event decks has a written trade-off and at least one negative resource delta.
-  14. `[PASS]` Shackleton practice terrain has rollover-risk slopes, game-only values are labelled, and Rapier WASM applies lunar gravity.
-  15. `[PASS]` Shackleton attempts, returned sample stock, and Ice Finder badge are validated and serialized separately from core campaign missions.
-  16. `[PASS]` Seeded co-op mission replay and role-specific dashboards reveal only each station's telemetry.
-  17. `[PASS]` Colyseus room accepts four clients, advances a server-authoritative turn, relays preset chat and voice signals, replaces a departed player with a bot, and reconnects a dropped client.
-  18. `[PASS]` Mobile Playwright campaign → rover → autopsy → notebook and private network mission-start smoke tests.
+  14. `[PASS]` Shackleton practice terrain includes procedural impact basins, rollover-risk slopes, game-only labels, and Rapier lunar gravity.
+  15. `[PASS]` Haptic feedback preserves vibration patterns on supported devices and safely reports unavailable-device behavior.
+  16. `[PASS]` Student Mission Mentor offers supportive, mission-aware guidance and distinguishes NASA sources from game simulations.
+  17. `[PASS]` Shackleton attempts, returned sample stock, and Ice Finder badge are validated and serialized separately from core campaign missions.
+  18. `[PASS]` Seeded co-op mission replay and role-specific dashboards reveal only each station's telemetry.
+  19. `[PASS]` Colyseus room accepts four clients, advances a server-authoritative turn, relays preset chat and voice signals, replaces a departed player with a bot, and reconnects a dropped client.
+  20. `[PASS]` Mobile Playwright campaign → rover → autopsy → notebook and private network mission-start smoke tests.
 
 ### Cadet HUD manual smoke check
 
@@ -51,11 +53,12 @@ Jr_AstroCamp maintains a dual-verification strategy covering both the interactiv
 ### Shackleton campaign integration manual smoke check
 
 1. Open `#/campaign` and confirm the Shackleton Ice Run card shows the separate game-simulation water/fuel stocks and badge status.
-2. Launch the game, confirm the lazy-loaded rover start screen opens, and inspect its source labels. NASA DONKI is marked LIVE or ARCHIVED when available; the route and sensor values remain labeled as game simulations.
-3. Complete a run and bank the samples. Confirm stocks and the Ice Finder badge update without changing the 76-mission total.
-4. Open the flight certificate and confirm it lists the badge separately from core mission counts.
-5. In the teacher activity dossier, confirm successful completion is logged; failed attempts are recorded as learning attempts with zero XP/coins.
-6. Use the debrief lesson link and confirm the Artemis lunar-ice notebook opens. When WebGL is unavailable, verify the existing 2D rover fallback can open.
+2. Launch the game and confirm the lazy-loaded rover view shows its instrument-style resource meters, procedural crater surface, and six-wheel rover. Inspect source labels: NASA DONKI is marked LIVE or ARCHIVED when available; route and sensor values remain game simulations, not LOLA terrain measurements.
+3. On a vibration-capable touch device, confirm short haptic cues on steering, heater changes, sampling, charging, slope-risk entry, and the run result. Devices without browser vibration support retain visual and audio feedback.
+4. Complete a run and bank the samples. Confirm stocks and the Ice Finder badge update without changing the 76-mission total.
+5. Open the flight certificate and confirm it lists the badge separately from core mission counts.
+6. In the teacher activity dossier, confirm successful completion is logged; failed attempts are recorded as learning attempts with zero XP/coins.
+7. Use the debrief lesson link and confirm the Artemis lunar-ice notebook opens. When WebGL is unavailable, verify the existing 2D rover fallback can open.
 
 ### Mobile Playwright smoke test
 
@@ -66,9 +69,19 @@ npx playwright install chromium
 npm run test:e2e -- --project=mobile-chromium
 ```
 
-It opens the campaign, launches the hub entry and rover, finishes a failure-as-learning run, and follows the debrief link to the Student Notebook.
-It also opens the multiplayer lobby, creates a private network room, starts the shared mission, and advances a team-voted turn.
-- **Latest result:** Pass (2/2) in Chromium at the Pixel 7 viewport.
+It opens the campaign, launches the hub entry and rover, finishes a failure-as-learning run, and follows the debrief link to the Student Notebook. It also opens the multiplayer lobby, creates a private network room, starts the shared mission, and advances a team-voted turn. The responsive Launchpad check measures overflow at phone, tablet, and desktop viewport widths.
+- **Latest result:** Pass (3/3) in Chromium at the Pixel 7 viewport.
+
+### Cross-browser responsive smoke test
+
+The responsive Launchpad test checks 320 px and 393 px phone widths, a 768 px tablet width, and a 1280 px desktop width. The compatibility project adds browser-engine coverage for desktop Chromium, desktop Firefox, and iPhone-sized WebKit emulation:
+
+```bash
+npx playwright install chromium firefox webkit
+npm run test:e2e:compat
+```
+
+The responsive check passed on desktop Chromium, desktop Firefox, and iPhone-sized WebKit emulation. These are automated browser-engine/device-profile emulations. They do not certify physical iOS Safari or Android hardware; perform a real-device pass before claiming full cross-platform certification.
 
 ### Refreshing archived NASA DONKI data
 

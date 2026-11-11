@@ -288,4 +288,253 @@
   .lg\:flex-row { flex-direction: row; }
 }
 
+/* Responsive shell and launchpad layouts */
+.app-main-content,
+.launchpad-page,
+.launchpad-hero,
+.launchpad-games-grid,
+.launchpad-comics-grid {
+  min-width: 0;
+}
+
+.launchpad-games-grid,
+.launchpad-comics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.launchpad-section-heading > div {
+  min-width: 0;
+}
+
+.launchpad-section-heading h2 {
+  overflow-wrap: anywhere;
+}
+
+.launchpad-games-grid > *,
+.launchpad-comics-grid > * {
+  min-width: 0;
+}
+
+.launchpad-page p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .arcade-nav-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .arcade-nav-brand {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .arcade-nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+  }
+
+  .arcade-nav-actions {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-main-content {
+    padding: 16px 12px 28px;
+  }
+
+  .launchpad-page {
+    gap: 24px;
+    padding-bottom: 24px;
+  }
+
+  .arcade-nav-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .arcade-nav-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .arcade-nav-brand > div:last-child {
+    min-width: 0;
+  }
+
+  .arcade-nav-brand > div:last-child > div:first-child {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .arcade-nav-brand .font-arcade {
+    font-size: 13px;
+  }
+
+  .arcade-nav-brand .font-mono-code {
+    display: none;
+  }
+
+  .arcade-nav-links {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .arcade-nav-links .pillar-tab {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .arcade-nav-actions {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .arcade-nav-actions > button {
+    min-width: 0;
+    min-height: 40px;
+    justify-content: center;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+
+  .arcade-nav-actions > div {
+    padding: 4px 8px;
+  }
+
+  .arcade-nav-actions > div > span {
+    display: none;
+  }
+
+  .launchpad-hero {
+    border-radius: 20px;
+  }
+
+  .launchpad-hero-content {
+    gap: 20px;
+    padding: 18px;
+  }
+
+  .launchpad-hero-content > div:first-child {
+    width: 100%;
+    max-width: none;
+  }
+
+  .launchpad-hero-content h1 {
+    max-width: 14ch;
+    font-size: clamp(2rem, 9vw, 3.25rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .launchpad-hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .launchpad-hero-actions button {
+    min-width: 0;
+    min-height: 48px;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .launchpad-hero-content > div:last-child {
+    padding: 16px;
+  }
+
+  .launchpad-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .launchpad-section-heading > div {
+    width: 100%;
+  }
+
+  .launchpad-section-heading > div > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  .launchpad-section-heading > button {
+    min-height: 40px;
+    text-align: left;
+  }
+
+  .launchpad-games-grid,
+  .launchpad-comics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
+  }
+
+  .launchpad-games-grid .cockpit-panel {
+    padding: 16px;
+  }
+
+  .launchpad-page button {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .arcade-nav-content {
+    padding-inline: 0;
+  }
+
+  .arcade-nav-brand {
+    gap: 8px;
+  }
+
+  .arcade-nav-brand .bg-gradient-to-tr {
+    width: 38px;
+    height: 38px;
+  }
+
+  .arcade-nav-brand .bg-gradient-to-r {
+    display: none;
+  }
+
+  .arcade-nav-actions {
+    grid-template-columns: 64px 40px repeat(2, minmax(0, 1fr));
+  }
+
+  .launchpad-hero-content {
+    padding: 14px;
+  }
+
+  .launchpad-hero-content h1 {
+    font-size: clamp(1.8rem, 9vw, 2.5rem);
+  }
+
+  .launchpad-games-grid,
+  .launchpad-comics-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 

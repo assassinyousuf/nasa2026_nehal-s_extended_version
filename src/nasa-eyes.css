@@ -976,3 +976,354 @@
   color: var(--color-muted);
   line-height: 1.45;
 }
+
+/* Responsive Orrery controls */
+@media (max-width: 900px) {
+  .ne-floating-celestial-toolbar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .ne-category-bar {
+    order: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ne-category-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ne-search-wrapper {
+    order: 1;
+    flex: 1 1 220px;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .ne-toolbar-quick-tools {
+    order: 2;
+  }
+
+  .ne-telemetry-hud-card {
+    top: 112px;
+    left: 10px;
+  }
+
+  .ne-side-drawer {
+    right: 10px;
+    width: min(440px, calc(100% - 20px));
+    bottom: 96px;
+    max-height: calc(100% - 126px);
+  }
+
+  .ne-stories-modal {
+    top: 112px;
+    left: 10px;
+    width: min(360px, calc(100% - 20px));
+    max-height: calc(100% - 136px);
+  }
+
+  .ne-stories-list {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .nasa-eyes-bottombar {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .ne-time-cluster {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .ne-scrubber-container {
+    min-width: 160px;
+  }
+
+  .ne-toggles-cluster {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 600px) {
+  .nasa-eyes-root {
+    top: 52px;
+    height: calc(100dvh - 52px);
+  }
+
+  .ne-floating-celestial-toolbar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .ne-category-bar {
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .ne-category-tab {
+    flex: 0 0 auto;
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+
+  .ne-search-wrapper {
+    flex-basis: calc(100% - 78px);
+  }
+
+  .ne-search-input-box {
+    min-height: 40px;
+  }
+
+  .ne-search-input-box input {
+    min-width: 0;
+  }
+
+  .ne-search-key-badge {
+    display: none;
+  }
+
+  .ne-toolbar-quick-tools {
+    gap: 4px;
+    padding-left: 6px;
+  }
+
+  .ne-btn-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+  }
+
+  .ne-telemetry-hud-card {
+    top: 105px;
+    left: 8px;
+    min-width: 0;
+    max-width: min(210px, calc(100vw - 16px));
+    padding: 7px 9px;
+  }
+
+  .ne-telemetry-body {
+    margin: 2px 0;
+  }
+
+  .ne-telemetry-body > div:nth-child(3) {
+    overflow-wrap: anywhere;
+  }
+
+  .ne-telemetry-drawer-btn {
+    min-height: 36px;
+  }
+
+  .ne-side-drawer {
+    top: auto;
+    right: 0;
+    bottom: calc(150px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 100%;
+    max-height: min(58dvh, 520px);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: neSheetIn 0.22s ease-out;
+  }
+
+  .ne-sheet-handle {
+    width: 40px;
+    height: 4px;
+    flex: 0 0 auto;
+    align-self: center;
+    margin: 8px 0 0;
+    border-radius: 999px;
+    background: var(--color-muted-2);
+  }
+
+  .ne-drawer-header {
+    padding: 10px 12px;
+  }
+
+  .ne-drawer-target-title {
+    font-size: 18px;
+  }
+
+  .ne-drawer-tabs {
+    flex: 0 0 auto;
+    scrollbar-width: none;
+  }
+
+  .ne-drawer-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ne-drawer-tab {
+    flex: 0 0 auto;
+    min-width: 76px;
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+
+  .ne-drawer-content {
+    min-height: 0;
+    padding: 12px;
+    gap: 12px;
+    overscroll-behavior: contain;
+  }
+
+  .ne-stories-modal {
+    top: 105px;
+    left: 8px;
+    width: calc(100% - 16px);
+    max-height: min(55dvh, 460px);
+  }
+
+  .ne-stories-list {
+    max-height: none;
+  }
+
+  .nasa-eyes-bottombar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    max-height: 156px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ne-time-cluster {
+    width: 100%;
+    gap: 5px;
+  }
+
+  .ne-time-display-box {
+    flex: 0 0 auto;
+    padding: 4px 6px;
+  }
+
+  .ne-clock-utc {
+    font-size: 10px;
+  }
+
+  .ne-clock-jd {
+    font-size: 8px;
+  }
+
+  .ne-time-transport {
+    flex: 0 0 auto;
+    gap: 1px;
+  }
+
+  .ne-transport-btn {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px;
+  }
+
+  .ne-scrubber-container {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .ne-scrubber-labels {
+    font-size: 9px;
+  }
+
+  .ne-scrubber-labels span:first-child,
+  .ne-scrubber-labels span:last-child {
+    display: none;
+  }
+
+  .ne-toggles-cluster {
+    width: 100%;
+    gap: 3px;
+  }
+
+  .ne-toggle-btn {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 6px 8px;
+  }
+
+  .ne-hover-reticle {
+    max-width: calc(100vw - 24px);
+  }
+
+  .ne-reticle-box {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .ne-category-tab {
+    padding-inline: 7px;
+  }
+
+  .ne-category-tab span {
+    font-size: 10px;
+  }
+
+  .ne-telemetry-hud-card {
+    max-width: 176px;
+  }
+
+  .ne-telemetry-body > div:first-child {
+    display: none;
+  }
+
+  .ne-telemetry-body > div:last-child {
+    display: none;
+  }
+
+  .ne-clock-jd {
+    display: none;
+  }
+}
+
+@media (max-height: 560px) and (max-width: 900px) {
+  .ne-floating-celestial-toolbar {
+    top: 6px;
+  }
+
+  .ne-telemetry-hud-card {
+    top: 96px;
+  }
+
+  .ne-side-drawer {
+    bottom: 72px;
+    max-height: calc(100% - 92px);
+  }
+
+  .nasa-eyes-bottombar {
+    max-height: 108px;
+    overflow: auto;
+  }
+
+  .ne-telemetry-body {
+    display: none;
+  }
+
+  .ne-side-drawer,
+  .ne-stories-modal {
+    max-height: calc(100% - 110px);
+  }
+}
+
+@keyframes neSheetIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}

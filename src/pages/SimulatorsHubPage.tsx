@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { AppRoute } from '../router/useAppRouter';
 import { SpaceGamesHubModal } from '../components/SpaceGamesHubModal';
 import { MarsEDLSimulatorModal } from '../components/MarsEDLSimulatorModal';
@@ -16,9 +16,6 @@ import {
   Compass,
   Rocket,
   Activity,
-  ChevronRight,
-  Maximize2,
-  Sliders,
 } from 'lucide-react';
 
 export type SimulatorTab =
@@ -54,12 +51,6 @@ export const SimulatorsHubPage: React.FC<SimulatorsHubPageProps> = ({
   };
 
   const [activeTab, setActiveTab] = useState<SimulatorTab>(() => getInitialTab(initialSimulator));
-
-  useEffect(() => {
-    if (initialSimulator) {
-      setActiveTab(getInitialTab(initialSimulator));
-    }
-  }, [initialSimulator]);
 
   const tabs: { id: SimulatorTab; label: string; icon: React.ReactNode; desc: string; tag: string }[] = [
     {

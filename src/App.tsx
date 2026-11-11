@@ -741,7 +741,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Page Area Mounted via URL Router */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 w-full space-y-8 relative z-10" style={{ flex: 1 }}>
+      <main className="app-main-content max-w-7xl mx-auto px-4 md:px-8 py-6 w-full space-y-8 relative z-10" style={{ flex: 1 }}>
         <Suspense fallback={<PageFallback />}>
           {renderActivePage()}
         </Suspense>

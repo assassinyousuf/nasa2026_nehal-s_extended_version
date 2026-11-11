@@ -45,10 +45,10 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
 
   return (
     <header className="sticky top-0 z-50 bg-[#040816]/95 backdrop-blur-md border-b-2 border-sky-500/30 px-4 md:px-8 py-3">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div className="arcade-nav-content max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
         
         {/* Left: Brand Logo & Callsign */}
-        <div className="flex items-center gap-3">
+        <div className="arcade-nav-brand flex items-center gap-3">
           <div
             onClick={handleLogoClick}
             title="Click for Hyperspace Warp Drive!"
@@ -88,7 +88,7 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
 
         {/* Center: 4 Chunky Game Navigation Tabs (Always Visible!) */}
         <nav
-          className="flex flex-wrap items-center gap-2 bg-slate-950/90 p-1.5 rounded-2xl border border-sky-500/30"
+          className="arcade-nav-links flex flex-wrap items-center gap-2 bg-slate-950/90 p-1.5 rounded-2xl border border-sky-500/30"
           style={{ display: 'flex' }}
         >
           <button
@@ -129,6 +129,18 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
 
           <button
             type="button"
+            onClick={() => handleNav('campaign')}
+            className={`pillar-tab px-4 py-2.5 rounded-xl text-xs md:text-sm font-arcade tracking-wider transition-all cursor-pointer ${
+              currentRoute === 'campaign'
+                ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.5)] font-bold'
+                : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+            }`}
+          >
+            🚀 76 MISSIONS
+          </button>
+
+          <button
+            type="button"
             onClick={() => handleNav('locker' as AppRoute)}
             className={`pillar-tab px-4 py-2.5 rounded-xl text-xs md:text-sm font-arcade tracking-wider transition-all cursor-pointer ${
               (currentRoute as string) === 'locker'
@@ -141,7 +153,7 @@ export const ArcadeNavBar: React.FC<ArcadeNavBarProps> = ({
         </nav>
 
         {/* Right: XP Meter, Sound FX, Judge & Teacher */}
-        <div className="flex items-center gap-2">
+        <div className="arcade-nav-actions flex items-center gap-2">
           {/* Space XP Meter */}
           <div className="bg-amber-400/10 border-2 border-amber-400/40 px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-inner">
             <span className="text-amber-400 text-base font-black">⚡</span>

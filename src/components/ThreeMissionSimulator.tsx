@@ -5396,6 +5396,8 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
 
   return (
     <div
+      className="three-mission-simulator"
+      data-mission-type={mission.gameType}
       style={{
         position: 'relative',
         width: '100%',
@@ -5737,6 +5739,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
 
       {/* ─── TOP COCKPIT AVIONICS STATUS BAR ────────────────────── */}
       <div
+        className="mission-sim-topbar"
         style={{
           position: 'absolute',
           top: '12px',
@@ -6052,6 +6055,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
 
       {/* ─── TACTICAL AEROSPACE NAVBALL HUD (BOTTOM-LEFT) ────────── */}
       <div
+        className="mission-sim-navball"
         style={{
           position: 'absolute',
           left: '14px',
@@ -6138,6 +6142,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
 
       {/* ─── LEFT TELEMETRY TAPES (SPEED, ALTITUDE, G-FORCE) ─────── */}
       <div
+        className="mission-sim-telemetry"
         style={{
           position: 'absolute',
           left: '14px',
@@ -6238,8 +6243,9 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
           </div>
         )}
 
-        {/* ─── KSP DELTA-V, SPACE ENGINEERS & STAR CITIZEN GAUGES ─── */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '5px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        <details className="mission-sim-advanced-telemetry">
+          <summary>ADVANCED FLIGHT DATA</summary>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '5px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
             <span style={{ color: '#94a3b8', fontSize: '10px' }} title="NASA Orbital Mechanics: Tsiolkovsky Delta-V Remaining">Δv BUDGET:</span>
             <strong style={{ color: '#38bdf8', fontSize: '11px', fontFamily: 'monospace' }}>
@@ -6288,12 +6294,14 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
             >
               {telemetry.flightAssistActive ? 'FA-ON [Z]' : 'FA-OFF [Z]'}
             </button>
+            </div>
           </div>
-        </div>
+          </details>
       </div>
 
       {/* ─── RIGHT HUD: CO-OP CREW STATIONS & REAL-TIME LOGS ────── */}
       <div
+        className="mission-sim-crew-panel"
         style={{
           position: 'absolute',
           right: '14px',
@@ -6402,14 +6410,14 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
         </div>
 
         {/* Live Crew Action Log Feed */}
+        <details className="mission-sim-action-log">
+          <summary>CREW ACTION LOG</summary>
         <div
           style={{
             background: hudTheme.cardBg,
             border: `1px solid ${hudTheme.border}`,
             borderRadius: '10px',
             padding: '8px 10px',
-            maxHeight: '130px',
-            overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             gap: '4px',
@@ -6417,9 +6425,6 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
             backdropFilter: 'blur(10px)',
           }}
         >
-          <span style={{ fontSize: '8.5px', color: '#94a3b8', fontWeight: 800, letterSpacing: '0.05em' }}>
-            LIVE CREW ACTION TICKER
-          </span>
           {roomState?.actionLogs && roomState.actionLogs.length > 0 ? (
             roomState.actionLogs.slice(0, 5).map((log) => {
               const roleColor = CREW_ROLES[log.role]?.color || '#94a3b8';
@@ -6432,10 +6437,11 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
             })
           ) : (
             <div style={{ color: '#64748b', fontStyle: 'italic' }}>
-              All 4 flight consoles active. NASA telemetry tracking nominal.
+              No crew actions yet.
             </div>
           )}
         </div>
+        </details>
       </div>
 
       {/* ─── DOCKING CROSSHAIR (FOR DOCKING MISSIONS) ─────────────── */}
@@ -6541,6 +6547,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
       {/* ─── ON-SCREEN LIFTOFF & PRE-LAUNCH CHECKLIST BANNER ─── */}
       {mission.gameType === 'launch' && telemetry.altitudeKm < 0.2 && telemetry.throttle === 0 && (
         <div
+          className="mission-sim-preflight"
           style={{
             position: 'absolute',
             bottom: '76px',
@@ -6565,10 +6572,10 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
               <span style={{ fontSize: '20px' }}>👨‍🚀</span>
               <div>
                 <span style={{ fontSize: '11px', fontWeight: 900, color: '#f8fafc', letterSpacing: '0.05em' }}>
-                  NASA ASTRONAUT PRE-LAUNCH FLIGHT READINESS CHECKLIST
+                PRE-LAUNCH CHECKLIST
                 </span>
                 <div style={{ fontSize: '9px', color: '#94a3b8' }}>
-                  Cape Canaveral Launch Complex 14 · Complete flight systems verification before ignition
+                Complete four system checks before liftoff.
                 </div>
               </div>
             </div>
@@ -6722,6 +6729,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
 
       {/* ─── BOTTOM CO-OP ROLE-SPECIFIC CONTROL BAR ─────────────── */}
       <div
+        className="mission-sim-control-dock"
         style={{
           position: 'absolute',
           bottom: '12px',
@@ -6738,7 +6746,7 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
           backdropFilter: 'blur(14px)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="mission-sim-control-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             style={{
               padding: '4px 8px',
@@ -7521,12 +7529,13 @@ export const ThreeMissionSimulator: React.FC<ThreeMissionSimulatorProps> = ({
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: telemetry.statusColor }}>
+        <div className="mission-sim-status" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: telemetry.statusColor }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: telemetry.statusColor }} />
           <span>{telemetry.statusText}</span>
         </div>
 
         <button
+          className="mission-sim-abort"
           onClick={handleAbort}
           style={{
             background: 'rgba(239, 68, 68, 0.2)',

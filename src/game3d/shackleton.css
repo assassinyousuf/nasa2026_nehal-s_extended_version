@@ -331,3 +331,254 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.shackleton-game-root {
+  gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background:
+    linear-gradient(rgba(7, 11, 17, 0.96), rgba(7, 11, 17, 0.96)),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(160, 183, 199, 0.04) 31px 32px);
+  color: #e4e9ec;
+  font-variant-numeric: tabular-nums;
+}
+
+.shackleton-header {
+  min-height: 48px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #35404b;
+}
+
+.shackleton-header h1 {
+  color: #f0f3f5;
+  font-size: clamp(17px, 2vw, 23px);
+  font-weight: 650;
+  letter-spacing: 0.015em;
+}
+
+.shackleton-eyebrow,
+.shackleton-hud > div > span {
+  color: #9eacb8;
+  font-size: 9px;
+  letter-spacing: 0.11em;
+}
+
+.shackleton-hud {
+  grid-template-columns: repeat(5, minmax(100px, 1fr));
+  gap: 1px;
+  border: 1px solid #2e3944;
+  background: #2e3944;
+}
+
+.shackleton-hud > div {
+  min-height: 66px;
+  gap: 5px;
+  padding: 8px 10px 7px;
+  border: 0;
+  border-radius: 0;
+  background: #101720;
+}
+
+.shackleton-hud strong {
+  color: #e7edf0;
+  font-size: 16px;
+  font-weight: 620;
+  letter-spacing: 0.015em;
+}
+
+.shackleton-hud strong small {
+  color: #798994;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.shackleton-meter-track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background: #27323b;
+}
+
+.shackleton-meter-track > span {
+  display: block;
+  height: 100%;
+  background: #8eb6a0;
+  transition: width 180ms linear;
+}
+
+.shackleton-meter-track > .shackleton-meter-track__slope {
+  background: #c9ad72;
+}
+
+.shackleton-hud > div:nth-child(3) .shackleton-meter-track > span {
+  background: #a68e68;
+}
+
+.shackleton-data-note {
+  min-height: 25px;
+  gap: 7px;
+  color: #9ba9b3;
+  font-size: 10px;
+}
+
+.shackleton-data-note a {
+  color: #8eb4c2;
+}
+
+.shackleton-weather-source {
+  color: #aeb9c1;
+}
+
+.shackleton-play-area {
+  gap: 8px;
+}
+
+.shackleton-canvas-frame {
+  border: 1px solid #35404b;
+  border-radius: 2px;
+  background: #070a0f;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.shackleton-overlay {
+  background: linear-gradient(90deg, rgba(5, 9, 14, 0.9), rgba(5, 9, 14, 0.72));
+}
+
+.shackleton-overlay h2 {
+  color: #f0f3f5;
+  font-weight: 620;
+}
+
+.shackleton-overlay p,
+.shackleton-overlay ol {
+  color: #bdc8ce;
+}
+
+.shackleton-side-panel {
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #35404b;
+  border-radius: 2px;
+  background: #0e151d;
+}
+
+.shackleton-side-panel h2 {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #2e3944;
+  color: #e5ebee;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.shackleton-side-panel p,
+.shackleton-tradeoff span,
+.shackleton-data-label span,
+.shackleton-small-note {
+  color: #aeb9c1;
+  font-size: 11px;
+}
+
+.shackleton-tradeoff,
+.shackleton-data-label {
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid #2d3943;
+  border-radius: 2px;
+  background: #111922;
+}
+
+.shackleton-tradeoff strong {
+  color: #dce4e8;
+  font-size: 11px;
+  font-weight: 620;
+}
+
+.shackleton-tradeoff button,
+.shackleton-game-root button {
+  min-height: 40px;
+  border-color: #44535e;
+  border-radius: 2px;
+  background: #18232c;
+  color: #e1e9ed;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.shackleton-game-root button:hover:not(:disabled) {
+  border-color: #83aab3;
+  background: #202f38;
+}
+
+.shackleton-primary-button {
+  border-color: #a8c6b3 !important;
+  background: #a8c6b3 !important;
+  color: #0b1510 !important;
+}
+
+.shackleton-data-label strong {
+  color: #c9ad72;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.shackleton-controls {
+  min-height: 48px;
+  color: #97a5ae;
+  font-size: 10px;
+}
+
+.shackleton-drive-controls {
+  gap: 4px;
+}
+
+.shackleton-touch-button {
+  width: 44px;
+  min-height: 42px;
+  border-radius: 2px;
+  background: #151e26;
+  color: #dce4e8;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.shackleton-touch-button:active {
+  border-color: #a8c6b3;
+  background: #263b38;
+  transform: translateY(1px);
+}
+
+@media (max-width: 760px) {
+  .shackleton-hud {
+    grid-template-columns: repeat(5, minmax(88px, 1fr));
+  }
+
+  .shackleton-controls {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shackleton-controls > p {
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .shackleton-data-note {
+    align-items: flex-start;
+  }
+
+  .shackleton-weather-source {
+    margin-left: auto;
+  }
+
+  .shackleton-controls > p {
+    max-width: 54%;
+    font-size: 9px;
+  }
+}

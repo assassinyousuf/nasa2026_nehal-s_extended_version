@@ -46,12 +46,24 @@ export const KILOPOWER_CHARGERS = [
   { id: 'charger-b', x: 18, z: -18 },
 ] as const;
 
+const PROCEDURAL_CRATERS = [
+  { x: -23, z: -17, radius: 5.8, depth: 1.9 },
+  { x: 22, z: 1, radius: 7.2, depth: 2.4 },
+  { x: -22, z: 19, radius: 5.1, depth: 1.6 },
+] as const;
+
 export function getShackletonHeight(x: number, z: number): number {
   const radius = Math.hypot(x + 2, z - 1);
   const rim = 2.8 * Math.exp(-((radius - 16) ** 2) / 8);
   const rollingGround = 1.6 * Math.sin(x * 0.16) * Math.cos(z * 0.13);
   const lowBench = -1.2 * Math.exp(-((x - 3) ** 2 + (z + 5) ** 2) / 70);
-  return rim + rollingGround + lowBench;
+  const impactBasins = PROCEDURAL_CRATERS.reduce((height, crater) => {
+    const distance = Math.hypot(x - crater.x, z - crater.z);
+    const bowl = -crater.depth * Math.exp(-2 * (distance / crater.radius) ** 4);
+    const raisedRim = 0.48 * Math.exp(-(((distance - crater.radius) / 0.8) ** 2));
+    return height + bowl + raisedRim;
+  }, 0);
+  return rim + rollingGround + lowBench + impactBasins;
 }
 
 export function getShackletonSlopeDegrees(x: number, z: number): number {

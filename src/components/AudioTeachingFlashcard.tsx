@@ -37,11 +37,18 @@ export const AudioTeachingFlashcard: React.FC<AudioTeachingFlashcardProps> = ({
   useEffect(() => {
     if (!isOpen) {
       speechEngine.stop();
-      setIsSpeaking(false);
     }
   }, [isOpen]);
 
   if (!isOpen || !card) return null;
+
+  const handleClose = () => {
+    if (isSpeaking) {
+      speechEngine.stop();
+      setIsSpeaking(false);
+    }
+    onClose();
+  };
 
   const currentTierContent = card.ageAdaptations[tier] || card.ageAdaptations.CADET;
 
@@ -70,7 +77,7 @@ export const AudioTeachingFlashcard: React.FC<AudioTeachingFlashcardProps> = ({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1001 }}>
+    <div className="modal-backdrop" onClick={handleClose} style={{ zIndex: 1001 }}>
       <div
         className="modal-container"
         onClick={(e) => e.stopPropagation()}
@@ -103,7 +110,7 @@ export const AudioTeachingFlashcard: React.FC<AudioTeachingFlashcardProps> = ({
               </h2>
             </div>
           </div>
-          <button onClick={onClose} className="modal-close-btn">
+          <button onClick={handleClose} className="modal-close-btn">
             <X size={18} />
           </button>
         </div>

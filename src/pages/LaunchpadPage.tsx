@@ -57,12 +57,12 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="launchpad-page space-y-8 pb-12">
 
       {/* ======================================================== */}
       {/* 1. GIANT CINEMATIC HERO FLIGHT CARD */}
       {/* ======================================================== */}
-      <div className="cockpit-panel rounded-3xl overflow-hidden relative border-2 border-sky-400/40 shadow-2xl">
+      <div className="launchpad-hero cockpit-panel rounded-3xl overflow-hidden relative border-2 border-sky-400/40 shadow-2xl">
         <div className="scan-beam"></div>
 
         {/* Background Cinematic Image with Gradient Vignette */}
@@ -77,7 +77,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
         </div>
 
         {/* Card Content Over Image */}
-        <div className="relative z-10 p-6 md:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <div className="launchpad-hero-content relative z-10 p-6 md:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
           
           <div className="space-y-4 max-w-2xl">
             {/* Mission Status Badges */}
@@ -101,7 +101,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
             </p>
 
             {/* Cockpit Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-3">
+            <div className="launchpad-hero-actions flex flex-wrap items-center gap-4 pt-3">
               <button
                 type="button"
                 onClick={handleLaunchHeroMission}
@@ -196,7 +196,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
       {/* 2. PLAYABLE NASA ARCADE GAMES (1-CLICK LAUNCH DECK)      */}
       {/* ======================================================== */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="launchpad-section-heading flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-amber-400 text-xl font-black">🕹️</span>
@@ -216,7 +216,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="launchpad-games-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Game 1: Lunar Lander */}
           <div className="cockpit-panel rounded-2xl p-5 border-2 border-sky-500/40 flex flex-col justify-between space-y-4">
             <div className="space-y-2">
@@ -311,7 +311,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
       {/* 3. GRAPHIC NOVEL COMIC ADVENTURES (EPISODES 1-4) */}
       {/* ======================================================== */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="launchpad-section-heading flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-amber-400 text-xl font-black">⚡</span>
@@ -330,7 +330,7 @@ export const LaunchpadPage: React.FC<LaunchpadPageProps> = ({
         </div>
 
         {/* Comic Cards Grid with High-Res Covers */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="launchpad-comics-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Issue 1 */}
           <div
